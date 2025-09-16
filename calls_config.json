@@ -1,0 +1,15 @@
+[
+  {
+    "urls": [
+      "turn:YOUR-COTURN-HOST:3478?transport=udp",
+      "turn:YOUR-COTURN-HOST:3478?transport=tcp"
+    ],
+    "username": "turnuser",
+    "credential": "turnpass"
+  },
+  {
+    "urls": [
+      "stun:YOUR-COTURN-HOST:3478"
+    ]
+  }
+]
