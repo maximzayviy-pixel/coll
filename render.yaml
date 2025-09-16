@@ -1,37 +1,40 @@
-# coturn on Render (private service)
-# Upload this repo to GitHub and deploy as a Blueprint.
+# coturn on Render (private service), TCP 3478 only
 services:
   - type: pserv
     name: coturn
-    env: docker
+    env: image            # важно: image, а не docker
     plan: starter
     autoDeploy: false
+
     image:
       url: coturn/coturn:latest
+      # Переопределяем команду контейнера
+      command:
+        - sh
+        - -lc
+        - >
+          turnserver -n --log-file=stdout
+          --realm=${TURN_REALM}
+          --user=${TURN_USER}:${TURN_PASS}
+          --fingerprint
+          --listening-ip=0.0.0.0
+          --listening-port=3478
+          --min-port=49152 --max-port=49999
+          --no-tls --no-dtls
+          ${EXTERNAL_IP:+--external-ip=${EXTERNAL_IP}}
+
+    # В pserv у Render открываются только TCP-порты.
     ports:
       - port: 3478
-        protocol: udp
-      - port: 3478
-        protocol: tcp
+
     envVars:
-      # Your Mattermost public domain (from MM_SERVICESETTINGS_SITEURL)
       - key: TURN_REALM
         value: "mattermost-9g8i.onrender.com"
-      # Static credentials for TURN auth
       - key: TURN_USER
         value: "turnuser"
       - key: TURN_PASS
         value: "turnpass"
-      # (Optional but recommended) Public IP of this service; set after first deploy
+      # (опционально) Публичный IP узла, на котором крутится coturn.
+      # Заполнить после первого деплоя и сделать Manual Deploy.
       - key: EXTERNAL_IP
         value: ""
-    dockerCommand: >
-      sh -lc 'turnserver -n --log-file=stdout
-      --realm=${TURN_REALM}
-      --user=${TURN_USER}:${TURN_PASS}
-      --fingerprint
-      --listening-ip=0.0.0.0
-      --listening-port=3478
-      --min-port=49152 --max-port=49999
-      --no-tls --no-dtls
-      ${EXTERNAL_IP:+--external-ip=${EXTERNAL_IP}}'
